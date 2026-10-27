@@ -74,6 +74,9 @@ export class MantenimientosService {
         `El kilometraje no puede ser menor al actual del vehículo (${vehiculo.kilometraje})`,
       );
     }
+    
+    
+
 
     // Regla de negocio: el mecánico debe existir (404) y estar activo (400)
     const mecanico = await this.mecanicosService.findOne(dto.mecanicoId);
@@ -252,11 +255,17 @@ export class MantenimientosService {
         break;
       }
 
-      case EstadoMantenimiento.COMPLETED:
-        // Los 4 campos ya vienen garantizados por el ValidateIf del DTO
-        if (dto.kilometrajeFinal! < mantenimiento.kilometraje) {
+        case EstadoMantenimiento.COMPLETED: {
+        // Regla de negocio: el kilometraje registrado no puede ser inferior al actual del vehículo.
+        // Se compara con el mayor entre el de ingreso y el actual, porque el vehículo
+        // pudo editarse mientras el mantenimiento estaba en curso
+        const kilometrajeMinimo = Math.max(
+          mantenimiento.kilometraje,
+          vehiculo.kilometraje,
+        );
+        if (dto.kilometrajeFinal! < kilometrajeMinimo) {
           throw new BadRequestException(
-            `kilometrajeFinal no puede ser menor al de ingreso (${mantenimiento.kilometraje})`,
+            `kilometrajeFinal no puede ser menor a ${kilometrajeMinimo} km`,
           );
         }
         if (dto.fechaFinalizacion! < mantenimiento.fechaProgramada) {
@@ -270,6 +279,7 @@ export class MantenimientosService {
         mantenimiento.kilometrajeFinal = dto.kilometrajeFinal!;
         nuevoEstadoVehiculo = EstadoVehiculo.AVAILABLE;
         break;
+      }
 
       case EstadoMantenimiento.CANCELLED:
         // Solo libera el vehículo si este mantenimiento lo tenía ocupado (IN_PROGRESS).
