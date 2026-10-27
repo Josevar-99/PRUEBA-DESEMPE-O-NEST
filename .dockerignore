@@ -1,0 +1,14 @@
+node_modules
+dist
+coverage
+.git
+.gitignore
+.env
+.env.example
+*.md
+.prettierrc
+oxlint.json
+vitest.config*.ts
+jest*.config.ts
+test
+
