@@ -21,6 +21,8 @@ import { VehiculosModule } from './modules/vehiculos/vehiculos.module.js';
 import { MecanicosModule } from './modules/mecanicos/mecanicos.module.js';
 import { MantenimientosModule } from './modules/mantenimientos/mantenimientos.module.js';
 import { IntegracionesModule } from './modules/integraciones/integraciones.module.js';
+import { AuditoriasModule } from './modules/auditorias/auditorias.module.js';
+import { AuditInterceptor } from './modules/auditorias/audit.interceptor.js';
 
 /**
  * 💡 [ADAPTAR PARA LA PRUEBA - MÓDULO PRINCIPAL]:
@@ -60,6 +62,7 @@ import { IntegracionesModule } from './modules/integraciones/integraciones.modul
     MecanicosModule,
     MantenimientosModule,
     IntegracionesModule,
+    AuditoriasModule,
 
     // 💡 [AGREGAR AQUÍ TUS NUEVOS MÓDULOS]:
     // ProductsModule,
@@ -81,6 +84,11 @@ import { IntegracionesModule } from './modules/integraciones/integraciones.modul
     {
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,
+    },
+    // Auditoría: va después de ResponseInterceptor para recibir los datos sin envolver
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: AuditInterceptor,
     },
     // Guard global de autenticación: rutas privadas por defecto (usar @Public() para eximir)
     {
