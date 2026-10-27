@@ -18,6 +18,7 @@ import { AuthModule } from './modules/auth/auth.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { TalleresModule } from './modules/talleres/talleres.module.js';
 import { VehiculosModule } from './modules/vehiculos/vehiculos.module.js';
+import { MecanicosModule } from './modules/mecanicos/mecanicos.module.js';
 
 /**
  * 💡 [ADAPTAR PARA LA PRUEBA - MÓDULO PRINCIPAL]:
@@ -54,6 +55,7 @@ import { VehiculosModule } from './modules/vehiculos/vehiculos.module.js';
     HealthModule,
     TalleresModule,
     VehiculosModule,
+    MecanicosModule,
 
     // 💡 [AGREGAR AQUÍ TUS NUEVOS MÓDULOS]:
     // ProductsModule,
