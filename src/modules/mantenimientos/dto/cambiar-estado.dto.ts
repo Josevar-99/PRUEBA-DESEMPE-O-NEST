@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer';
+import { Transform,Type } from 'class-transformer';
 import {
   IsDate,
   IsEnum,
@@ -23,7 +23,9 @@ export class CambiarEstadoDto {
   })
   estado: EstadoMantenimiento;
 
-  @ValidateIf((o: CambiarEstadoDto) => o.estado === EstadoMantenimiento.COMPLETED)
+   @ValidateIf((o: CambiarEstadoDto) => o.estado === EstadoMantenimiento.COMPLETED)
+  // trim antes de validar: "   " queda en "" y @IsNotEmpty lo rechaza
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
   @IsNotEmpty({ message: 'trabajoRealizado es obligatorio para completar' })
   @MaxLength(2000)
