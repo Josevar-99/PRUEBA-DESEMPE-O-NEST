@@ -51,7 +51,7 @@ export class MantenimientosService {
 
   /**
    * Validaciones en orden: primero datos del request (400), luego existencia (404)
-   * y estado de cada entidad (400), y al final el cruce de horarios (409).
+   * y estado de cada entidad (400), y al final los conflictos con otros mantenimientos (409).
    */
   async create(dto: CreateMantenimientoDto): Promise<Mantenimiento> {
     if (dto.fechaFinEstimada <= dto.fechaProgramada) {
@@ -60,6 +60,7 @@ export class MantenimientosService {
       );
     }
 
+    // Regla de negocio: el vehículo debe existir (404)
     const vehiculo = await this.vehiculosService.findOne(dto.vehiculoId);
     // Requisito 2.9
     if (vehiculo.estado === EstadoVehiculo.INACTIVE) {
@@ -73,7 +74,24 @@ export class MantenimientosService {
         `El kilometraje no puede ser menor al actual del vehículo (${vehiculo.kilometraje})`,
       );
     }
-        // Regla de negocio: un vehículo no puede tener más de un mantenimiento activo a la vez
+
+    // Regla de negocio: el mecánico debe existir (404) y estar activo (400)
+    const mecanico = await this.mecanicosService.findOne(dto.mecanicoId);
+    if (mecanico.estado === EstadoActivo.INACTIVE) {
+      throw new BadRequestException(
+        'El mecánico está inactivo y no puede recibir nuevos mantenimientos',
+      );
+    }
+
+    // Regla de negocio: el taller debe existir (404) y estar activo (400)
+    const taller = await this.talleresService.findOne(dto.tallerId);
+    if (taller.estado === EstadoActivo.INACTIVE) {
+      throw new BadRequestException(
+        'El taller está inactivo y no puede recibir mantenimientos',
+      );
+    }
+
+    // Regla de negocio: un vehículo no puede tener más de un mantenimiento activo a la vez
     const activoExistente = await this.mantenimientoRepository.findOne({
       where: {
         vehiculo: { id: vehiculo.id },
@@ -83,22 +101,6 @@ export class MantenimientosService {
     if (activoExistente) {
       throw new ConflictException(
         `El vehículo ya tiene un mantenimiento activo (${activoExistente.estado}); debe completarse o cancelarse antes de crear otro`,
-      );
-    }
-
-    const mecanico = await this.mecanicosService.findOne(dto.mecanicoId);
-    // Requisito 3.7
-    if (mecanico.estado === EstadoActivo.INACTIVE) {
-      throw new BadRequestException(
-        'El mecánico está inactivo y no puede recibir nuevos mantenimientos',
-      );
-    }
-
-    const taller = await this.talleresService.findOne(dto.tallerId);
-    // Requisito 4.6 (el inexistente ya respondió 404 en findOne)
-    if (taller.estado === EstadoActivo.INACTIVE) {
-      throw new BadRequestException(
-        'El taller está inactivo y no puede recibir mantenimientos',
       );
     }
 
@@ -226,15 +228,29 @@ export class MantenimientosService {
     let nuevoEstadoVehiculo: EstadoVehiculo | null = null;
 
     switch (dto.estado) {
-      case EstadoMantenimiento.IN_PROGRESS:
+      case EstadoMantenimiento.IN_PROGRESS: {
         // El vehículo pudo inactivarse después de programar este mantenimiento
         if (vehiculo.estado !== EstadoVehiculo.AVAILABLE) {
           throw new ConflictException(
             `El vehículo no está disponible (estado actual: ${vehiculo.estado})`,
           );
         }
+        // Regla de negocio: el técnico no puede tener dos trabajos en curso a la vez,
+        // aunque los horarios programados no se crucen (ej: el anterior se retrasó)
+        const enCurso = await this.mantenimientoRepository.findOne({
+          where: {
+            mecanico: { id: mantenimiento.mecanico.id },
+            estado: EstadoMantenimiento.IN_PROGRESS,
+          },
+        });
+        if (enCurso) {
+          throw new ConflictException(
+            'El técnico ya tiene un mantenimiento en proceso; debe completarlo antes de iniciar otro',
+          );
+        }
         nuevoEstadoVehiculo = EstadoVehiculo.IN_MAINTENANCE;
         break;
+      }
 
       case EstadoMantenimiento.COMPLETED:
         // Los 4 campos ya vienen garantizados por el ValidateIf del DTO
@@ -256,7 +272,7 @@ export class MantenimientosService {
         break;
 
       case EstadoMantenimiento.CANCELLED:
-         // Solo libera el vehículo si este mantenimiento lo tenía ocupado (IN_PROGRESS).
+        // Solo libera el vehículo si este mantenimiento lo tenía ocupado (IN_PROGRESS).
         // Cancelar uno SCHEDULED no toca el vehículo: nunca lo sacó de AVAILABLE
         if (estadoActual === EstadoMantenimiento.IN_PROGRESS) {
           nuevoEstadoVehiculo = EstadoVehiculo.AVAILABLE;

@@ -14,9 +14,21 @@ import { Vehiculo } from '../../vehiculos/entities/vehiculo.entity.js';
 import { Mecanico } from '../../mecanicos/entities/mecanico.entity.js';
 import { Taller } from '../../talleres/entities/taller.entity.js';
 
+/**
+ * Regla de negocio: un solo mantenimiento activo por vehículo. El índice es único
+ * solo para las filas SCHEDULED o IN_PROGRESS, así los COMPLETED y CANCELLED del
+ * historial no cuentan. Si dos requests simultáneos pasan la validación del service,
+ * la BD rechaza el segundo y el filtro global lo traduce a 409 (código 23505).
+ */
 @Index('UQ_mantenimiento_activo_por_vehiculo', ['vehiculo'], {
   unique: true,
   where: `"estado" IN ('SCHEDULED', 'IN_PROGRESS')`,
+})
+// Regla de negocio: un técnico no puede tener dos mantenimientos IN_PROGRESS a la vez.
+// Solo cuenta IN_PROGRESS: varios SCHEDULED sin cruce de horario están permitidos (3.10 caso d)
+@Index('UQ_mantenimiento_en_proceso_por_mecanico', ['mecanico'], {
+  unique: true,
+  where: `"estado" = 'IN_PROGRESS'`,
 })
 @Entity('mantenimientos')
 export class Mantenimiento {
