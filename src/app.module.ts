@@ -20,6 +20,7 @@ import { TalleresModule } from './modules/talleres/talleres.module.js';
 import { VehiculosModule } from './modules/vehiculos/vehiculos.module.js';
 import { MecanicosModule } from './modules/mecanicos/mecanicos.module.js';
 import { MantenimientosModule } from './modules/mantenimientos/mantenimientos.module.js';
+import { IntegracionesModule } from './modules/integraciones/integraciones.module.js';
 
 /**
  * 💡 [ADAPTAR PARA LA PRUEBA - MÓDULO PRINCIPAL]:
@@ -58,6 +59,7 @@ import { MantenimientosModule } from './modules/mantenimientos/mantenimientos.mo
     VehiculosModule,
     MecanicosModule,
     MantenimientosModule,
+    IntegracionesModule,
 
     // 💡 [AGREGAR AQUÍ TUS NUEVOS MÓDULOS]:
     // ProductsModule,
