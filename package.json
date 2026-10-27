@@ -9,6 +9,7 @@
   "scripts": {
     "build": "nest build",
     "deploy": "nest deploy",
+    "seed": "nest build && node dist/database/seeds/seed.js",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
