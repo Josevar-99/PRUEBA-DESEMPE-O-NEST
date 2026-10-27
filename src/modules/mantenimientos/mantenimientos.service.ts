@@ -103,7 +103,7 @@ export class MantenimientosService {
     });
     if (activoExistente) {
       throw new ConflictException(
-        `El vehículo ya tiene un mantenimiento activo (${activoExistente.estado}); debe completarse o cancelarse antes de crear otro`,
+        `El vehículo ${vehiculo.placa} ya tiene un mantenimiento activo (${activoExistente.estado})`,
       );
     }
 
