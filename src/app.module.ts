@@ -17,6 +17,7 @@ import { UsersModule } from './modules/users/users.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { TalleresModule } from './modules/talleres/talleres.module.js';
+import { VehiculosModule } from './modules/vehiculos/vehiculos.module.js';
 
 /**
  * 💡 [ADAPTAR PARA LA PRUEBA - MÓDULO PRINCIPAL]:
@@ -52,6 +53,7 @@ import { TalleresModule } from './modules/talleres/talleres.module.js';
     AuthModule,
     HealthModule,
     TalleresModule,
+    VehiculosModule,
 
     // 💡 [AGREGAR AQUÍ TUS NUEVOS MÓDULOS]:
     // ProductsModule,
