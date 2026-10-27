@@ -73,6 +73,18 @@ export class MantenimientosService {
         `El kilometraje no puede ser menor al actual del vehículo (${vehiculo.kilometraje})`,
       );
     }
+        // Regla de negocio: un vehículo no puede tener más de un mantenimiento activo a la vez
+    const activoExistente = await this.mantenimientoRepository.findOne({
+      where: {
+        vehiculo: { id: vehiculo.id },
+        estado: In(ESTADOS_ACTIVOS),
+      },
+    });
+    if (activoExistente) {
+      throw new ConflictException(
+        `El vehículo ya tiene un mantenimiento activo (${activoExistente.estado}); debe completarse o cancelarse antes de crear otro`,
+      );
+    }
 
     const mecanico = await this.mecanicosService.findOne(dto.mecanicoId);
     // Requisito 3.7
@@ -215,7 +227,7 @@ export class MantenimientosService {
 
     switch (dto.estado) {
       case EstadoMantenimiento.IN_PROGRESS:
-        // El vehículo pudo ocuparse con otro mantenimiento, o inactivarse, después de programar este
+        // El vehículo pudo inactivarse después de programar este mantenimiento
         if (vehiculo.estado !== EstadoVehiculo.AVAILABLE) {
           throw new ConflictException(
             `El vehículo no está disponible (estado actual: ${vehiculo.estado})`,
@@ -244,8 +256,8 @@ export class MantenimientosService {
         break;
 
       case EstadoMantenimiento.CANCELLED:
-        // Solo libera el vehículo si ESTE mantenimiento lo tenía ocupado. Cancelar uno
-        // SCHEDULED no toca el vehículo: podría estar IN_MAINTENANCE por otro mantenimiento
+         // Solo libera el vehículo si este mantenimiento lo tenía ocupado (IN_PROGRESS).
+        // Cancelar uno SCHEDULED no toca el vehículo: nunca lo sacó de AVAILABLE
         if (estadoActual === EstadoMantenimiento.IN_PROGRESS) {
           nuevoEstadoVehiculo = EstadoVehiculo.AVAILABLE;
         }

@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -13,6 +14,10 @@ import { Vehiculo } from '../../vehiculos/entities/vehiculo.entity.js';
 import { Mecanico } from '../../mecanicos/entities/mecanico.entity.js';
 import { Taller } from '../../talleres/entities/taller.entity.js';
 
+@Index('UQ_mantenimiento_activo_por_vehiculo', ['vehiculo'], {
+  unique: true,
+  where: `"estado" IN ('SCHEDULED', 'IN_PROGRESS')`,
+})
 @Entity('mantenimientos')
 export class Mantenimiento {
   @PrimaryGeneratedColumn('uuid')
