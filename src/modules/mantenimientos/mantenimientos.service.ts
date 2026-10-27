@@ -215,12 +215,16 @@ export class MantenimientosService {
     const estadoActual = mantenimiento.estado;
     const vehiculo = mantenimiento.vehiculo;
 
-    if (!TRANSICIONES[estadoActual].includes(dto.estado)) {
-      throw new BadRequestException(
-        `No se puede pasar de ${estadoActual} a ${dto.estado}`,
+       // Regla de negocio: transición inválida -> 409, porque el request es válido
+    // pero choca con el estado actual del mantenimiento
+    const permitidos = TRANSICIONES[estadoActual];
+    if (!permitidos.includes(dto.estado)) {
+      throw new ConflictException(
+        permitidos.length === 0
+          ? `El mantenimiento está ${estadoActual}, que es un estado final: no admite más cambios`
+          : `No se puede pasar de ${estadoActual} a ${dto.estado}. Desde ${estadoActual} solo se permite: ${permitidos.join(', ')}`,
       );
     }
-
     if (
       dto.estado === EstadoMantenimiento.CANCELLED &&
       user.role !== Role.ADMIN
