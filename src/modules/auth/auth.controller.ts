@@ -10,8 +10,8 @@ import type { JwtPayload } from '../../common/decorators/current-user.decorator.
 import { Role } from '../../common/enums/role.enum.js';
 
 /**
- * Autenticación. Solo login es público; register exige token de ADMIN
- * para que nadie pueda crearse una cuenta con permisos por su cuenta.
+ * Authentication. Only login is public; register requires an ADMIN token
+ * so nobody can create an account with elevated permissions on their own.
  */
 @ApiTags('auth')
 @Controller('auth')
@@ -21,23 +21,23 @@ export class AuthController {
   @Post('register')
   @Roles(Role.ADMIN)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Registrar usuario ADMIN o TECHNICIAN (solo ADMIN)' })
+  @ApiOperation({ summary: 'Register an ADMIN or TECHNICIAN user (ADMIN only)' })
   register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
 
   @Public()
   @Post('login')
-  // Login no crea un recurso: responde 200, no el 201 que Nest pone por defecto en POST
+  // Login does not create a resource: it responds 200, not the 201 Nest sets by default for POST
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Iniciar sesión y obtener el JWT' })
+  @ApiOperation({ summary: 'Log in and obtain the JWT' })
   login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
   }
 
   @Get('profile')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Datos del usuario autenticado (payload del JWT)' })
+  @ApiOperation({ summary: 'Authenticated user data (JWT payload)' })
   getProfile(@CurrentUser() user: JwtPayload) {
     return user;
   }

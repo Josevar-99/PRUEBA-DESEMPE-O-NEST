@@ -8,41 +8,41 @@ import {
 import { Role } from '../../../common/enums/role.enum.js';
 
 /**
- * 💡 [ADAPTAR PARA LA PRUEBA - ENTIDAD DE BASE DE DATOS]:
- * Modifica las columnas o relaciones según el diagrama de base de datos solicitado.
+ * 💡 [ADAPT FOR THE TEST - DATABASE ENTITY]:
+ * Modify the columns or relations according to the requested database diagram.
  *
- * 💡 RELACIONES FRECUENTES EN PRUEBAS TÉCNICAS:
- * 1. Un usuario tiene muchas órdenes (OneToMany):
+ * 💡 COMMON RELATIONS IN TECHNICAL TESTS:
+ * 1. A user has many orders (OneToMany):
  *    @OneToMany(() => Order, (order) => order.user)
  *    orders: Order[];
  *
- * 2. Un usuario pertenece a una empresa/sucursal (ManyToOne):
+ * 2. A user belongs to a company/branch (ManyToOne):
  *    @ManyToOne(() => Company, (company) => company.users, { onDelete: 'CASCADE' })
  *    @JoinColumn({ name: 'company_id' })
  *    company: Company;
  *
- * 3. Eliminación lógica (Soft Delete):
+ * 3. Logical deletion (Soft Delete):
  *    @DeleteDateColumn()
  *    deletedAt: Date;
  */
 @Entity('users')
 export class User {
-  // UUID generado automáticamente como clave primaria
+  // UUID automatically generated as primary key
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  // Correo único
+  // Unique email
   @Column({ unique: true })
   email: string;
 
-  // Contraseña encriptada con bcrypt
+  // Password encrypted with bcrypt
   @Column({select: false})
   password: string;
 
   @Column()
   name: string;
 
-  // 💡 Rol del usuario: vinculado al enum de roles
+  // 💡 User role: linked to the roles enum
   @Column({
     type: 'enum',
     enum: Role,
@@ -53,7 +53,7 @@ export class User {
   @Column({ default: true })
   isActive: boolean;
 
-  // 💡 Agrega aquí más campos si el enunciado lo exige:
+  // 💡 Add more fields here if the specification requires it:
   // @Column({ nullable: true })
   // phone: string;
   //

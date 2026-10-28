@@ -13,25 +13,25 @@ export class AuthService {
   ) {}
 
   /**
-   * Registro de usuario. Solo un ADMIN puede ejecutarlo (ver AuthController).
-   * No devuelve token: el usuario creado obtiene el suyo con su propio login,
-   * así el admin nunca recibe credenciales de otra persona.
+   * User registration. Only an ADMIN can execute it (see AuthController).
+   * Does not return a token: the created user gets their own token with their own login,
+   * so the admin never receives another person's credentials.
    */
   async register(registerDto: RegisterDto) {
     return this.usersService.create(registerDto);
   }
 
   /**
-   * Inicio de sesión: valida credenciales y genera el JWT (requisito 1.4).
+   * Login: validates credentials and generates the JWT (requirement 1.4).
    */
   async login(loginDto: LoginDto) {
-    // findByEmail incluye el hash a propósito (password tiene select: false)
+    // findByEmail includes the hash on purpose (password has select: false)
     const user = await this.usersService.findByEmail(loginDto.email);
 
-    // Mismo mensaje si el email no existe o la contraseña es incorrecta,
-    // para no revelar qué correos están registrados
+    // Same message whether the email does not exist or the password is wrong,
+    // to avoid revealing which emails are registered
     if (!user) {
-      throw new UnauthorizedException('Credenciales incorrectas');
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     const isPasswordValid = await bcrypt.compare(
@@ -40,12 +40,12 @@ export class AuthService {
     );
 
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Credenciales incorrectas');
+      throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Se revisa después de la contraseña: sin ella no se puede saber si la cuenta está inactiva
+    // Checked after the password: without it you cannot know if the account is inactive
     if (!user.isActive) {
-      throw new UnauthorizedException('La cuenta se encuentra inactiva');
+      throw new UnauthorizedException('The account is inactive');
     }
 
     const token = await this.generateToken(user.id, user.email, user.role);
@@ -58,9 +58,9 @@ export class AuthService {
   }
 
   /**
-   * Firma el JWT con JWT_SECRET y JWT_EXPIRES_IN (configurados en AuthModule).
-   * El payload es lo que JwtAuthGuard pone en request.user y @CurrentUser() entrega:
-   * sub = id del usuario, usado para encontrar el mecánico del TECHNICIAN.
+   * Signs the JWT with JWT_SECRET and JWT_EXPIRES_IN (configured in AuthModule).
+   * The payload is what JwtAuthGuard puts in request.user and @CurrentUser() delivers:
+   * sub = user id, used to find the mechanic for the TECHNICIAN.
    */
   private async generateToken(sub: string, email: string, role: string) {
     const payload = { sub, email, role };

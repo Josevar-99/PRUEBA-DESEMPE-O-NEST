@@ -6,14 +6,14 @@ import { User } from './entities/user.entity.js';
 import { Role } from '../../common/enums/role.enum.js';
 
 /**
- * 💡 [ADAPTAR PARA LA PRUEBA - PRUEBAS UNITARIAS DE SERVICIOS EN JEST]:
+ * 💡 [ADAPT FOR THE TEST - UNIT TESTS FOR SERVICES IN JEST]:
  *
- * ESTRUCTURA BASE PARA PROBAR CUALQUIER SERVICIO CON REPOSITORIOS:
- * 1. Define un objeto `mockRepository` con jest.fn() para los métodos usados (find, findOne, create, save, remove).
- * 2. Inyecta el mock con `{ provide: getRepositoryToken(TuEntidad), useValue: mockRepository }`.
- * 3. En cada test (`it`), configura el resultado esperado con:
- *    `mockRepository.metodo.mockResolvedValue(datosSimulados)`
- * 4. Ejecuta el método del servicio y aserta con `expect(...)`.
+ * BASE STRUCTURE FOR TESTING ANY SERVICE WITH REPOSITORIES:
+ * 1. Define a `mockRepository` object with jest.fn() for the used methods (find, findOne, create, save, remove).
+ * 2. Inject the mock with `{ provide: getRepositoryToken(YourEntity), useValue: mockRepository }`.
+ * 3. In each test (`it`), configure the expected result with:
+ *    `mockRepository.method.mockResolvedValue(simulatedData)`
+ * 4. Run the service method and assert with `expect(...)`.
  */
 describe('UsersService', () => {
   let service: UsersService;
@@ -53,12 +53,12 @@ describe('UsersService', () => {
     service = module.get<UsersService>(UsersService);
   });
 
-  it('debe estar definido', () => {
+  it('should be defined', () => {
     expect(service).toBeDefined();
   });
 
   describe('create', () => {
-    it('debe crear un usuario exitosamente', async () => {
+    it('should create a user successfully', async () => {
       mockRepository.findOne.mockResolvedValue(null);
       mockRepository.create.mockReturnValue(mockUser);
       mockRepository.save.mockResolvedValue(mockUser);
@@ -78,7 +78,7 @@ describe('UsersService', () => {
       expect(result.email).toBe('test@example.com');
     });
 
-    it('debe lanzar ConflictException si el email ya existe', async () => {
+    it('should throw ConflictException if the email already exists', async () => {
       mockRepository.findOne.mockResolvedValue(mockUser);
 
       await expect(
@@ -92,14 +92,14 @@ describe('UsersService', () => {
   });
 
   describe('findOne', () => {
-    it('debe retornar un usuario si existe', async () => {
+    it('should return a user if it exists', async () => {
       mockRepository.findOne.mockResolvedValue(mockUser);
 
       const user = await service.findOne(mockUser.id);
       expect(user).toEqual(mockUser);
     });
 
-    it('debe lanzar NotFoundException si el usuario no existe', async () => {
+    it('should throw NotFoundException if the user does not exist', async () => {
       mockRepository.findOne.mockResolvedValue(null);
 
       await expect(service.findOne('invalid-id')).rejects.toThrow(
@@ -109,7 +109,7 @@ describe('UsersService', () => {
   });
 
   describe('findAll', () => {
-    it('debe retornar usuarios paginados', async () => {
+    it('should return paginated users', async () => {
       mockRepository.findAndCount.mockResolvedValue([[mockUser], 1]);
 
       const result = await service.findAll({ page: 1, limit: 10, skip: 0 });

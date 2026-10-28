@@ -9,15 +9,15 @@ import { ROLES_KEY } from '../decorators/roles.decorator.js';
 import { Role } from '../enums/role.enum.js';
 
 /**
- * 💡 [ADAPTAR PARA LA PRUEBA - GUARD DE CONTROL DE ROLES (RBAC)]:
- * Este Guard compara los roles definidos en `@Roles(...)` con el rol del usuario autenticado (`request.user.role`).
+ * 💡 [ADAPT FOR THE TEST - ROLE-BASED ACCESS CONTROL (RBAC) GUARD]:
+ * This Guard compares the roles defined in `@Roles(...)` with the authenticated user's role (`request.user.role`).
  *
- * 💡 ADAPTACIONES COMUNES EN PRUEBAS:
- * 1. Si tu modelo de usuario tiene múltiples roles (ej: `user.roles: string[]` en vez de un solo rol):
- *    Cambia la comparación a:
+ * 💡 COMMON ADAPTATIONS IN TESTS:
+ * 1. If your user model has multiple roles (e.g.: `user.roles: string[]` instead of a single role):
+ *    Change the comparison to:
  *    `const hasRole = requiredRoles.some((role) => user.roles.includes(role));`
- * 2. Si necesitas verificar permisos granulares (ej: `PERMISOS: ['CREAR_PRODUCTO', 'ELIMINAR_USUARIO']`):
- *    Crea un PermissionGuard similar a este leyendo una metadata de permisos.
+ * 2. If you need to check granular permissions (e.g.: `PERMISSIONS: ['CREATE_PRODUCT', 'DELETE_USER']`):
+ *    Create a PermissionGuard similar to this one reading a permissions metadata.
  */
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -29,7 +29,7 @@ export class RolesGuard implements CanActivate {
       context.getClass(),
     ]);
 
-    // Si el endpoint no especifica ningún rol, cualquiera autenticado puede entrar
+    // If the endpoint specifies no roles, any authenticated user can access it
     if (!requiredRoles || requiredRoles.length === 0) {
       return true;
     }
@@ -38,16 +38,16 @@ export class RolesGuard implements CanActivate {
 
     if (!user || !user.role) {
       throw new ForbiddenException(
-        'Acceso denegado: el usuario no posee un rol asignado o no se encuentra autenticado',
+        'Access denied: the user does not have an assigned role or is not authenticated',
       );
     }
 
-    // Comprobar si el rol del usuario coincide con alguno de los roles permitidos
+    // Check if the user's role matches any of the allowed roles
     const hasRole = requiredRoles.some((role) => user.role === role);
 
     if (!hasRole) {
       throw new ForbiddenException(
-        `Acceso denegado: se requiere uno de los siguientes roles [${requiredRoles.join(', ')}]`,
+        `Access denied: one of the following roles is required [${requiredRoles.join(', ')}]`,
       );
     }
 

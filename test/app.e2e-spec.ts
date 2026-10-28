@@ -6,24 +6,24 @@ import { AppModule } from '../src/app.module.js';
 import { User } from '../src/modules/users/entities/user.entity.js';
 
 /**
- * 💡 [ADAPTAR PARA LA PRUEBA - PRUEBAS END-TO-END (E2E) CON JEST]:
+ * 💡 [ADAPT FOR THE TEST - END-TO-END (E2E) TESTS WITH JEST]:
  *
- * Este archivo demuestra cómo validar todo el pipeline de la aplicación:
- * 1. Middleware: Verificación del header `x-request-id`.
- * 2. Interceptor: Verificación de la estructura `ResponseInterceptor` ({ success, statusCode, data, timestamp }).
- * 3. Guard: Verificación de que rutas protegidas devuelven `401 Unauthorized` si no hay token Bearer.
- * 4. Filter + ValidationPipe: Verificación de que peticiones con DTO inválido devuelven `400 Bad Request` formateado.
+ * This file demonstrates how to validate the entire application pipeline:
+ * 1. Middleware: Verification of the `x-request-id` header.
+ * 2. Interceptor: Verification of the `ResponseInterceptor` structure ({ success, statusCode, data, timestamp }).
+ * 3. Guard: Verification that protected routes return `401 Unauthorized` if no Bearer token is provided.
+ * 4. Filter + ValidationPipe: Verification that requests with an invalid DTO return a formatted `400 Bad Request`.
  *
- * 💡 CÓMO AGREGAR PRUEBAS PARA TUS NUEVOS ENDPOINTS:
- * - Para simular peticiones autenticadas:
- *   `.set('Authorization', 'Bearer ' + tokenValido)`
- * - Para override de nuevos repositorios:
- *   `.overrideProvider(getRepositoryToken(TuNuevaEntidad)).useValue(mockRepo)`
+ * 💡 HOW TO ADD TESTS FOR YOUR NEW ENDPOINTS:
+ * - To simulate authenticated requests:
+ *   `.set('Authorization', 'Bearer ' + validToken)`
+ * - To override new repositories:
+ *   `.overrideProvider(getRepositoryToken(YourNewEntity)).useValue(mockRepo)`
  */
 describe('App Endpoints & Architecture (e2e)', () => {
   let app: INestApplication;
 
-  // Mock del repositorio TypeORM para que las pruebas pasen sin requerir base de datos física levantada
+  // Mock of the TypeORM repository so that tests pass without requiring a physical database to be running
   const mockUserRepository = {
     findOne: jest.fn().mockResolvedValue(null),
     findAndCount: jest.fn().mockResolvedValue([[], 0]),
@@ -41,6 +41,8 @@ describe('App Endpoints & Architecture (e2e)', () => {
     destroy: jest.fn().mockResolvedValue(true),
     query: jest.fn().mockResolvedValue([{ '?column?': 1 }]),
     getRepository: jest.fn().mockReturnValue(mockUserRepository),
+    entityMetadatas: [],
+    options: { type: 'postgres' },
   };
 
   beforeAll(async () => {
@@ -55,7 +57,7 @@ describe('App Endpoints & Architecture (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
 
-    // Replicar configuración global idéntica a main.ts
+    // Replicate the same global configuration as main.ts
     app.setGlobalPrefix('api');
     app.useGlobalPipes(
       new ValidationPipe({
@@ -75,15 +77,15 @@ describe('App Endpoints & Architecture (e2e)', () => {
   });
 
   describe('Middleware & Interceptors', () => {
-    it('debe responder con header x-request-id y formato envelope de ResponseInterceptor', async () => {
+    it('should respond with x-request-id header and ResponseInterceptor envelope format', async () => {
       const response = await request(app.getHttpServer())
         .get('/api/health')
         .expect(200);
 
-      // Verificación de LoggerMiddleware (x-request-id)
+      // Verification of LoggerMiddleware (x-request-id)
       expect(response.headers['x-request-id']).toBeDefined();
 
-      // Verificación de ResponseInterceptor ({ success, statusCode, timestamp, data })
+      // Verification of ResponseInterceptor ({ success, statusCode, timestamp, data })
       expect(response.body).toHaveProperty('success', true);
       expect(response.body).toHaveProperty('statusCode', 200);
       expect(response.body).toHaveProperty('timestamp');
@@ -93,12 +95,12 @@ describe('App Endpoints & Architecture (e2e)', () => {
   });
 
   describe('Guards', () => {
-    it('debe rechazar con 401 Unauthorized al acceder a una ruta protegida sin token', async () => {
+    it('should reject with 401 Unauthorized when accessing a protected route without a token', async () => {
       const response = await request(app.getHttpServer())
-        .get('/api/auth/profile')
+        .get('/api/vehicles')
         .expect(401);
 
-      // Verificación de AllExceptionsFilter ({ success, statusCode, message, path })
+      // Verification of AllExceptionsFilter ({ success, statusCode, message, path })
       expect(response.body).toHaveProperty('success', false);
       expect(response.body).toHaveProperty('statusCode', 401);
       expect(response.body).toHaveProperty('message');
@@ -106,12 +108,12 @@ describe('App Endpoints & Architecture (e2e)', () => {
   });
 
   describe('Validation & Filters', () => {
-    it('debe retornar 400 Bad Request con detalles de validación al enviar payload inválido', async () => {
+    it('should return 400 Bad Request with validation details when sending an invalid payload', async () => {
       const response = await request(app.getHttpServer())
-        .post('/api/auth/register')
+        .post('/api/auth/login')
         .send({
           email: 'not-an-email',
-          password: '123', // Demasiado corta
+          password: '123', // Too short
         })
         .expect(400);
 

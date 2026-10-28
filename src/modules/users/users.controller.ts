@@ -15,9 +15,9 @@ import { Roles } from '../../common/decorators/roles.decorator.js';
 import { Role } from '../../common/enums/role.enum.js';
 
 /**
- * Gestión de usuarios, solo ADMIN. La creación vive en POST /auth/register.
- * No hay DELETE: los usuarios se inactivan (isActive: false) para no romper
- * su vínculo con mecánicos y auditorías.
+ * User management, ADMIN only. Creation lives in POST /auth/register.
+ * There is no DELETE: users are deactivated (isActive: false) to avoid breaking
+ * their link with mechanics and audit records.
  */
 @ApiTags('users')
 @ApiBearerAuth()
@@ -27,19 +27,19 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Listar usuarios paginados' })
+  @ApiOperation({ summary: 'List paginated users' })
   findAll(@Query() paginationDto: PaginationDto) {
     return this.usersService.findAll(paginationDto);
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Obtener un usuario por id' })
+  @ApiOperation({ summary: 'Get a user by id' })
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.usersService.findOne(id);
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Actualizar un usuario (incluye activar o inactivar)' })
+  @ApiOperation({ summary: 'Update a user (includes activating or deactivating)' })
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateUserDto: UpdateUserDto,

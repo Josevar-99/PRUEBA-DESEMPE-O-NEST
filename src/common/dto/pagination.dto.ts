@@ -2,11 +2,11 @@ import { Type } from 'class-transformer';
 import { IsInt, IsOptional, Max, Min } from 'class-validator';
 
 /**
- * 💡 [ADAPTAR PARA LA PRUEBA - DTO DE PAGINACIÓN GENÉRICO]:
- * Utilízalo como query params en endpoints GET de listado (ej: `@Query() paginationDto: PaginationDto`).
+ * 💡 [ADAPT FOR THE TEST - GENERIC PAGINATION DTO]:
+ * Use it as query params in GET list endpoints (e.g.: `@Query() paginationDto: PaginationDto`).
  *
- * 💡 EXTENSIONES FRECUENTES EN PRUEBAS:
- * Si te piden filtros de búsqueda o ordenamiento, puedes agregar:
+ * 💡 COMMON EXTENSIONS IN TESTS:
+ * If search filters or sorting are required, you can add:
  *   @IsOptional()
  *   @IsString()
  *   search?: string;
@@ -22,19 +22,19 @@ import { IsInt, IsOptional, Max, Min } from 'class-validator';
 export class PaginationDto {
   @IsOptional()
   @Type(() => Number)
-  @IsInt({ message: 'El campo page debe ser un número entero' })
-  @Min(1, { message: 'El número mínimo de página es 1' })
+  @IsInt({ message: 'The page field must be an integer' })
+  @Min(1, { message: 'The minimum page number is 1' })
   page?: number = 1;
 
   @IsOptional()
   @Type(() => Number)
-  @IsInt({ message: 'El campo limit debe ser un número entero' })
-  @Min(1, { message: 'El límite mínimo es 1' })
-  @Max(100, { message: 'El límite máximo por página es 100' })
+  @IsInt({ message: 'The limit field must be an integer' })
+  @Min(1, { message: 'The minimum limit is 1' })
+  @Max(100, { message: 'The maximum limit per page is 100' })
   limit?: number = 10;
 
   /**
-   * Calcula el offset para TypeORM: `skip = (page - 1) * limit`
+   * Calculates the offset for TypeORM: `skip = (page - 1) * limit`
    */
   get skip(): number {
     return ((this.page ?? 1) - 1) * (this.limit ?? 10);

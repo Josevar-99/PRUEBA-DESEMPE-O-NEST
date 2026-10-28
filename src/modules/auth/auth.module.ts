@@ -6,9 +6,9 @@ import { AuthController } from './auth.controller.js';
 import { UsersModule } from '../users/users.module.js';
 
 /**
- * 💡 [ADAPTAR PARA LA PRUEBA - MÓDULO DE AUTENTICACIÓN]:
- * Configura JwtModule de forma asíncrona leyendo las credenciales validadas por Zod en ConfigService.
- * Exporta JwtModule y AuthService para que JwtAuthGuard pueda validar tokens en toda la app.
+ * 💡 [ADAPT FOR THE TEST - AUTHENTICATION MODULE]:
+ * Configures JwtModule asynchronously reading the credentials validated by Zod in ConfigService.
+ * Exports JwtModule and AuthService so JwtAuthGuard can validate tokens across the entire app.
  */
 @Module({
   imports: [

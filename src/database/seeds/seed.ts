@@ -6,232 +6,232 @@ import {
   FindOptionsWhere,
   ObjectLiteral,
 } from 'typeorm';
-// Importar typeorm.config carga el .env (dotenv) antes de validarlo
+// Importing typeorm.config loads the .env (dotenv) before validating it
 import AppDataSource from '../../config/typeorm.config.js';
 import { validateEnv } from '../../config/env.schema.js';
 import { User } from '../../modules/users/entities/user.entity.js';
-import { Mecanico } from '../../modules/mecanicos/entities/mecanico.entity.js';
-import { Taller } from '../../modules/talleres/entities/taller.entity.js';
-import { Vehiculo } from '../../modules/vehiculos/entities/vehiculo.entity.js';
-import { Mantenimiento } from '../../modules/mantenimientos/entities/mantenimiento.entity.js';
+import { Mechanic } from '../../modules/mechanics/entities/mechanic.entity.js';
+import { Workshop } from '../../modules/workshops/entities/workshop.entity.js';
+import { Vehicle } from '../../modules/vehicles/entities/vehicle.entity.js';
+import { Maintenance } from '../../modules/maintenances/entities/maintenance.entity.js';
 import { Role } from '../../common/enums/role.enum.js';
-import { EstadoActivo } from '../../common/enums/estado-activo.enum.js';
-import { EstadoVehiculo } from '../../common/enums/estado-vehiculo.enum.js';
-import { EstadoMantenimiento } from '../../common/enums/estado-mantenimiento.enum.js';
-import { TipoMantenimiento } from '../../common/enums/tipo-mantenimiento.enum.js';
+import { ActiveStatus } from '../../common/enums/active-status.enum.js';
+import { VehicleStatus } from '../../common/enums/vehicle-status.enum.js';
+import { MaintenanceStatus } from '../../common/enums/maintenance-status.enum.js';
+import { MaintenanceType } from '../../common/enums/maintenance-type.enum.js';
 
-// Contraseñas de desarrollo, documentadas en el README
+// Development passwords, documented in the README
 const PASSWORD_ADMIN = 'Admin123*';
-const PASSWORD_TECNICO = 'Tecnico123*';
+const PASSWORD_TECHNICIAN = 'Tecnico123*';
 
 /**
- * Busca por clave natural y solo crea si no existe (requisito 9.2).
- * Ejecutar el seed dos veces devuelve los registros existentes en vez de duplicarlos.
+ * Looks up by natural key and only creates if it does not exist (requirement 9.2).
+ * Running the seed twice returns the existing records instead of duplicating them.
  */
-async function buscarOCrear<T extends ObjectLiteral>(
+async function findOrCreate<T extends ObjectLiteral>(
   manager: EntityManager,
-  entidad: EntityTarget<T>,
-  clave: NoInfer<FindOptionsWhere<T>>,
-  datos: () => Promise<NoInfer<DeepPartial<T>>> | NoInfer<DeepPartial<T>>,
+  entity: EntityTarget<T>,
+  key: NoInfer<FindOptionsWhere<T>>,
+  data: () => Promise<NoInfer<DeepPartial<T>>> | NoInfer<DeepPartial<T>>,
 ): Promise<T> {
-  const repo = manager.getRepository(entidad);
-  const existente = await repo.findOne({ where: clave });
-  if (existente) return existente;
-  // datos es una función para no calcular hashes de bcrypt cuando el registro ya existe
-  return repo.save(repo.create(await datos()));
+  const repo = manager.getRepository(entity);
+  const existingRecord = await repo.findOne({ where: key });
+  if (existingRecord) return existingRecord;
+  // Use a function to avoid computing bcrypt hashes when the record already exists.
+  return repo.save(repo.create(await data()));
 }
 
-async function sembrar(manager: EntityManager): Promise<void> {
-  // ---------- Usuarios: 1 ADMIN + 3 TECHNICIAN ----------
-  const hashTecnico = await bcrypt.hash(PASSWORD_TECNICO, 10);
+async function seedData(manager: EntityManager): Promise<void> {
+  // ---------- Users: 1 ADMIN + 3 TECHNICIAN ----------
+  const technicianPasswordHash = await bcrypt.hash(PASSWORD_TECHNICIAN, 10);
 
-  await buscarOCrear(manager, User, { email: 'admin@taller.com' }, async () => ({
-    name: 'Administrador',
-    email: 'admin@taller.com',
+  await findOrCreate(manager, User, { email: 'admin@workshop.com' }, async () => ({
+    name: 'Administrator',
+    email: 'admin@workshop.com',
     password: await bcrypt.hash(PASSWORD_ADMIN, 10),
     role: Role.ADMIN,
   }));
 
-  const usuarioCarlos = await buscarOCrear(manager, User, { email: 'tecnico1@taller.com' }, () => ({
+  const carlosUser = await findOrCreate(manager, User, { email: 'tecnico1@workshop.com' }, () => ({
     name: 'Carlos Pérez',
-    email: 'tecnico1@taller.com',
-    password: hashTecnico,
+    email: 'tecnico1@workshop.com',
+    password: technicianPasswordHash,
     role: Role.TECHNICIAN,
   }));
 
-  const usuarioLaura = await buscarOCrear(manager, User, { email: 'tecnico2@taller.com' }, () => ({
+  const lauraUser = await findOrCreate(manager, User, { email: 'tecnico2@workshop.com' }, () => ({
     name: 'Laura Gómez',
-    email: 'tecnico2@taller.com',
-    password: hashTecnico,
+    email: 'tecnico2@workshop.com',
+    password: technicianPasswordHash,
     role: Role.TECHNICIAN,
   }));
 
-  // El mecánico inactivo necesita usuario porque usuario_id es obligatorio
-  const usuarioAndres = await buscarOCrear(manager, User, { email: 'tecnico3@taller.com' }, () => ({
+  // The inactive mechanic needs a user because usuario_id is required.
+  const andresUser = await findOrCreate(manager, User, { email: 'tecnico3@workshop.com' }, () => ({
     name: 'Andrés Ruiz',
-    email: 'tecnico3@taller.com',
-    password: hashTecnico,
+    email: 'tecnico3@workshop.com',
+    password: technicianPasswordHash,
     role: Role.TECHNICIAN,
     isActive: false,
   }));
 
-  // ---------- Mecánicos: 2 activos vinculados + 1 inactivo ----------
-  const carlos = await buscarOCrear(manager, Mecanico, { correo: 'carlos.perez@taller.com' }, () => ({
-    nombre: 'Carlos Pérez',
-    correo: 'carlos.perez@taller.com',
-    especialidad: 'Motor',
-    estado: EstadoActivo.ACTIVE,
-    usuario: usuarioCarlos,
+  // ---------- Mechanics: 2 active linked + 1 inactive ----------
+  const carlos = await findOrCreate(manager, Mechanic, { email: 'carlos.perez@workshop.com' }, () => ({
+    name: 'Carlos Pérez',
+    email: 'carlos.perez@workshop.com',
+    specialty: 'Motor',
+    status: ActiveStatus.ACTIVE,
+    user: carlosUser,
   }));
 
-  const laura = await buscarOCrear(manager, Mecanico, { correo: 'laura.gomez@taller.com' }, () => ({
-    nombre: 'Laura Gómez',
-    correo: 'laura.gomez@taller.com',
-    especialidad: 'Frenos y suspensión',
-    estado: EstadoActivo.ACTIVE,
-    usuario: usuarioLaura,
+  const laura = await findOrCreate(manager, Mechanic, { email: 'laura.gomez@workshop.com' }, () => ({
+    name: 'Laura Gómez',
+    email: 'laura.gomez@workshop.com',
+    specialty: 'Brakes and suspension',
+    status: ActiveStatus.ACTIVE,
+    user: lauraUser,
   }));
 
-  await buscarOCrear(manager, Mecanico, { correo: 'andres.ruiz@taller.com' }, () => ({
-    nombre: 'Andrés Ruiz',
-    correo: 'andres.ruiz@taller.com',
-    especialidad: 'Sistema eléctrico',
-    estado: EstadoActivo.INACTIVE,
-    usuario: usuarioAndres,
+  await findOrCreate(manager, Mechanic, { email: 'andres.ruiz@workshop.com' }, () => ({
+    name: 'Andrés Ruiz',
+    email: 'andres.ruiz@workshop.com',
+    specialty: 'Electrical system',
+    status: ActiveStatus.INACTIVE,
+    user: andresUser,
   }));
 
-  // ---------- Talleres: 1 activo + 1 inactivo ----------
-  const central = await buscarOCrear(manager, Taller, { nombre: 'Taller Central' }, () => ({
-    nombre: 'Taller Central',
-    direccion: 'Calle 30 #45-12, Barranquilla',
-    estado: EstadoActivo.ACTIVE,
+  // ---------- Workshops: 1 active + 1 inactive ----------
+  const central = await findOrCreate(manager, Workshop, { name: 'Taller Central' }, () => ({
+    name: 'Taller Central',
+    address: 'Calle 30 #45-12, Barranquilla',
+    status: ActiveStatus.ACTIVE,
   }));
 
-  await buscarOCrear(manager, Taller, { nombre: 'Taller Norte' }, () => ({
-    nombre: 'Taller Norte',
-    direccion: 'Carrera 51B #84-30, Barranquilla',
-    estado: EstadoActivo.INACTIVE,
+  await findOrCreate(manager, Workshop, { name: 'Taller Norte' }, () => ({
+    name: 'Taller Norte',
+    address: 'Carrera 51B #84-30, Barranquilla',
+    status: ActiveStatus.INACTIVE,
   }));
 
-  // ---------- Vehículos: 2 AVAILABLE, 1 IN_MAINTENANCE, 1 INACTIVE ----------
-  // ABC123 ya tiene el kilometraje con que terminó su mantenimiento completado
-  const abc123 = await buscarOCrear(manager, Vehiculo, { placa: 'ABC123' }, () => ({
-    placa: 'ABC123',
-    marca: 'Chevrolet',
-    modelo: 'Spark',
-    anio: 2022,
-    kilometraje: 45200,
-    estado: EstadoVehiculo.AVAILABLE,
+  // ---------- Vehicles: 2 AVAILABLE, 1 IN_MAINTENANCE, 1 INACTIVE ----------
+  // ABC123 already has the mileage it had when its completed maintenance finished
+  const abc123 = await findOrCreate(manager, Vehicle, { plate: 'ABC123' }, () => ({
+    plate: 'ABC123',
+    make: 'Chevrolet',
+    model: 'Spark',
+    year: 2022,
+    mileage: 45200,
+    status: VehicleStatus.AVAILABLE,
   }));
 
-  const def456 = await buscarOCrear(manager, Vehiculo, { placa: 'DEF456' }, () => ({
-    placa: 'DEF456',
-    marca: 'Renault',
-    modelo: 'Logan',
-    anio: 2021,
-    kilometraje: 60000,
-    estado: EstadoVehiculo.AVAILABLE,
+  const def456 = await findOrCreate(manager, Vehicle, { plate: 'DEF456' }, () => ({
+    plate: 'DEF456',
+    make: 'Renault',
+    model: 'Logan',
+    year: 2021,
+    mileage: 60000,
+    status: VehicleStatus.AVAILABLE,
   }));
 
-  // IN_MAINTENANCE porque tiene el mantenimiento IN_PROGRESS de abajo (requisito 9.1d)
-  const ghi789 = await buscarOCrear(manager, Vehiculo, { placa: 'GHI789' }, () => ({
-    placa: 'GHI789',
-    marca: 'Toyota',
-    modelo: 'Hilux',
-    anio: 2023,
-    kilometraje: 30500,
-    estado: EstadoVehiculo.IN_MAINTENANCE,
+  // IN_MAINTENANCE because it has the IN_PROGRESS maintenance below (requirement 9.1d)
+  const ghi789 = await findOrCreate(manager, Vehicle, { plate: 'GHI789' }, () => ({
+    plate: 'GHI789',
+    make: 'Toyota',
+    model: 'Hilux',
+    year: 2023,
+    mileage: 30500,
+    status: VehicleStatus.IN_MAINTENANCE,
   }));
 
-  await buscarOCrear(manager, Vehiculo, { placa: 'JKL012' }, () => ({
-    placa: 'JKL012',
-    marca: 'Nissan',
-    modelo: 'Frontier',
-    anio: 2019,
-    kilometraje: 120000,
-    estado: EstadoVehiculo.INACTIVE,
+  await findOrCreate(manager, Vehicle, { plate: 'JKL012' }, () => ({
+    plate: 'JKL012',
+    make: 'Nissan',
+    model: 'Frontier',
+    year: 2019,
+    mileage: 120000,
+    status: VehicleStatus.INACTIVE,
   }));
 
-  // ---------- Mantenimientos ----------
-  // Fechas fijas: son parte de la clave natural; con new Date() cada ejecución duplicaría
-  const fechaCompletado = new Date('2026-09-15T07:30:00-05:00');
-  const fechaEnProceso = new Date('2026-10-27T07:30:00-05:00');
-  const fechaProgramado = new Date('2026-11-10T08:00:00-05:00');
+  // ---------- Maintenances ----------
+  // Fixed dates: they are part of the natural key; using new Date() on each run would create duplicates
+  const completedDate = new Date('2026-09-15T07:30:00-05:00');
+  const inProgressDate = new Date('2026-10-27T07:30:00-05:00');
+  const scheduledDate = new Date('2026-11-10T08:00:00-05:00');
 
-  // COMPLETED: alimenta el historial de ABC123 (requisito 9.1e)
-  await buscarOCrear(
+  // COMPLETED: feeds the history of ABC123 (requirement 9.1e)
+  await findOrCreate(
     manager,
-    Mantenimiento,
-    { vehiculo: { id: abc123.id }, fechaProgramada: fechaCompletado },
+    Maintenance,
+    { vehicle: { id: abc123.id }, scheduledAt: completedDate },
     () => ({
-      tipo: TipoMantenimiento.PREVENTIVE,
-      descripcion: 'Cambio de aceite y filtros',
-      kilometraje: 45000,
-      fechaProgramada: fechaCompletado,
-      fechaFinEstimada: new Date('2026-09-15T09:00:00-05:00'),
-      estado: EstadoMantenimiento.COMPLETED,
-      trabajoRealizado: 'Cambio de aceite 5W-30, filtro de aceite y filtro de aire',
-      costoFinal: 250000,
-      fechaFinalizacion: new Date('2026-09-15T09:00:00-05:00'),
-      kilometrajeFinal: 45200,
-      vehiculo: abc123,
-      mecanico: carlos,
-      taller: central,
+      type: MaintenanceType.PREVENTIVE,
+      description: 'Oil and filter change',
+      mileage: 45000,
+      scheduledAt: completedDate,
+      estimatedEndAt: new Date('2026-09-15T09:00:00-05:00'),
+      status: MaintenanceStatus.COMPLETED,
+      workPerformed: 'Changed 5W-30 oil, oil filter, and air filter',
+      finalCost: 250000,
+      completedAt: new Date('2026-09-15T09:00:00-05:00'),
+      finalMileage: 45200,
+      vehicle: abc123,
+      mechanic: carlos,
+      workshop: central,
     }),
   );
 
-  // IN_PROGRESS: es el que mantiene a GHI789 en IN_MAINTENANCE
-  await buscarOCrear(
+  // IN_PROGRESS: this is the one keeping GHI789 in IN_MAINTENANCE
+  await findOrCreate(
     manager,
-    Mantenimiento,
-    { vehiculo: { id: ghi789.id }, fechaProgramada: fechaEnProceso },
+    Maintenance,
+    { vehicle: { id: ghi789.id }, scheduledAt: inProgressDate },
     () => ({
-      tipo: TipoMantenimiento.CORRECTIVE,
-      descripcion: 'Ruido en suspensión delantera',
-      kilometraje: 30500,
-      fechaProgramada: fechaEnProceso,
-      fechaFinEstimada: new Date('2026-10-27T12:00:00-05:00'),
-      estado: EstadoMantenimiento.IN_PROGRESS,
-      vehiculo: ghi789,
-      mecanico: laura,
-      taller: central,
+      type: MaintenanceType.CORRECTIVE,
+      description: 'Noise in front suspension',
+      mileage: 30500,
+      scheduledAt: inProgressDate,
+      estimatedEndAt: new Date('2026-10-27T12:00:00-05:00'),
+      status: MaintenanceStatus.IN_PROGRESS,
+      vehicle: ghi789,
+      mechanic: laura,
+      workshop: central,
     }),
   );
 
-  // SCHEDULED: permite probar SCHEDULED -> IN_PROGRESS sin crear datos a mano
-  await buscarOCrear(
+  // SCHEDULED: allows testing SCHEDULED -> IN_PROGRESS without creating data manually
+  await findOrCreate(
     manager,
-    Mantenimiento,
-    { vehiculo: { id: def456.id }, fechaProgramada: fechaProgramado },
+    Maintenance,
+    { vehicle: { id: def456.id }, scheduledAt: scheduledDate },
     () => ({
-      tipo: TipoMantenimiento.PREVENTIVE,
-      descripcion: 'Revisión de frenos y alineación',
-      kilometraje: 60000,
-      fechaProgramada: fechaProgramado,
-      fechaFinEstimada: new Date('2026-11-10T10:00:00-05:00'),
-      vehiculo: def456,
-      mecanico: carlos,
-      taller: central,
+      type: MaintenanceType.PREVENTIVE,
+      description: 'Brake and alignment inspection',
+      mileage: 60000,
+      scheduledAt: scheduledDate,
+      estimatedEndAt: new Date('2026-11-10T10:00:00-05:00'),
+      vehicle: def456,
+      mechanic: carlos,
+      workshop: central,
     }),
   );
 }
 
 async function main(): Promise<void> {
-  // Mismo validador que la app: si el .env está incompleto falla con mensaje claro
-  // en lugar de conectarse a una BD por defecto
+  // Same validator as the app: if the .env is incomplete it fails with a clear message
+  // instead of connecting to a default DB
   validateEnv(process.env);
 
   await AppDataSource.initialize();
   try {
-    // Todo o nada: si un registro falla, no queda la BD a medio sembrar
-    await AppDataSource.transaction((manager) => sembrar(manager));
-    console.log('Seed completado. Usuarios: admin@taller.com, tecnico1@taller.com, tecnico2@taller.com, tecnico3@taller.com (inactivo)');
+    // All or nothing: if one record fails, the DB is not left half-seeded
+    await AppDataSource.transaction((manager) => seedData(manager));
+    console.log('Seed completed. Users: admin@workshop.com, tecnico1@workshop.com, tecnico2@workshop.com, tecnico3@workshop.com (inactive)');
   } finally {
     await AppDataSource.destroy();
   }
 }
 
 main().catch((error: unknown) => {
-  console.error('Error ejecutando el seed:', error);
+  console.error('Error running the seed:', error);
   process.exitCode = 1;
 });

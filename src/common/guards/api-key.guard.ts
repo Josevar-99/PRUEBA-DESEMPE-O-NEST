@@ -9,9 +9,9 @@ import { Request } from 'express';
 import { timingSafeEqual } from 'node:crypto';
 
 /**
- * Guard para integraciones externas (requisitos 8 y 9). Valida el header
- * x-api-key contra API_KEY del .env. No es global: se aplica con
- * @UseGuards(ApiKeyGuard) solo en los endpoints de integración.
+ * Guard for external integrations (requirements 8 and 9). Validates the
+ * x-api-key header against API_KEY from .env. Not global: applied with
+ * @UseGuards(ApiKeyGuard) only on integration endpoints.
  */
 @Injectable()
 export class ApiKeyGuard implements CanActivate {
@@ -19,24 +19,24 @@ export class ApiKeyGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<Request>();
-    const recibida = request.headers['x-api-key'];
-    const esperada = this.configService.get<string>('API_KEY') ?? '';
+    const received = request.headers['x-api-key'];
+    const expected = this.configService.get<string>('API_KEY') ?? '';
 
-    // Requisito 10d: llave ausente o incorrecta -> 401
-    if (typeof recibida !== 'string' || !this.coincide(recibida, esperada)) {
-      throw new UnauthorizedException('API Key inválida o ausente');
+    // Requirement 10d: missing or incorrect key -> 401
+    if (typeof received !== 'string' || !this.matches(received, expected)) {
+      throw new UnauthorizedException('Invalid or missing API Key');
     }
     return true;
   }
 
   /**
-   * timingSafeEqual tarda lo mismo sin importar dónde difieran las llaves.
-   * Con === un atacante podría medir tiempos y adivinar la llave carácter a carácter.
-   * Exige buffers del mismo largo, por eso se compara el largo primero.
+   * timingSafeEqual takes the same time regardless of where the keys differ.
+   * With === an attacker could measure timings and guess the key character by character.
+   * Requires buffers of the same length, so the length is compared first.
    */
-  private coincide(recibida: string, esperada: string): boolean {
-    const a = Buffer.from(recibida);
-    const b = Buffer.from(esperada);
+  private matches(received: string, expected: string): boolean {
+    const a = Buffer.from(received);
+    const b = Buffer.from(expected);
     return a.length === b.length && timingSafeEqual(a, b);
   }
 }

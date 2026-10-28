@@ -3,11 +3,11 @@ import { IsBoolean, IsOptional } from 'class-validator';
 import { CreateUserDto } from './create-user.dto.js';
 
 /**
- * Todos los campos de CreateUserDto pasan a ser opcionales, con sus mismas
- * validaciones (incluido el MaxLength(72) de bcrypt), más isActive.
+ * All fields from CreateUserDto become optional, keeping the same
+ * validations (including the MaxLength(72) for bcrypt), plus isActive.
  */
 export class UpdateUserDto extends PartialType(CreateUserDto) {
   @IsOptional()
-  @IsBoolean({ message: 'isActive debe ser true o false' })
+  @IsBoolean({ message: 'isActive must be true or false' })
   isActive?: boolean;
 }

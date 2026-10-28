@@ -6,17 +6,17 @@ import {
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { config as dotenvConfig } from 'dotenv';
 
-// Cargar .env para DataSource CLI si se ejecuta fuera de Nest
+// Load .env for DataSource CLI when run outside of Nest
 dotenvConfig();
 
 /**
- * 💡 [ADAPTAR PARA LA PRUEBA - TYPEORM / CONEXIÓN DE BASE DE DATOS]:
- * 1. type: 'postgres' (cambiar a 'mysql', 'sqlite', etc. si el enunciado lo pide).
- * 2. synchronize: 'true' en desarrollo auto-crea/actualiza las tablas a partir de las entidades.
- *    En producción se debe poner en false y usar migraciones.
- * 3. ssl: Si te piden conectar a una BD en la nube (Neon, Supabase, Render),
- *    descomenta: ssl: { rejectUnauthorized: false }
- * 4. logging: poner en true si necesitas ver las consultas SQL reales en la terminal para depurar.
+ * 💡 [ADAPT FOR THE TEST - TYPEORM / DATABASE CONNECTION]:
+ * 1. type: 'postgres' (change to 'mysql', 'sqlite', etc. if the specification requires it).
+ * 2. synchronize: 'true' in development auto-creates/updates tables from entities.
+ *    In production it should be set to false and migrations should be used.
+ * 3. ssl: If you need to connect to a cloud DB (Neon, Supabase, Render),
+ *    uncomment: ssl: { rejectUnauthorized: false }
+ * 4. logging: set to true if you need to see real SQL queries in the terminal for debugging.
  */
 export const getTypeOrmConfig = (
   configService: ConfigService,
@@ -28,16 +28,16 @@ export const getTypeOrmConfig = (
   password: configService.get<string>('POSTGRES_PASSWORD'),
   database: configService.get<string>('POSTGRES_DB'),
 
-  // Carga automáticamente todas las entidades registradas en módulos mediante TypeOrmModule.forFeature([TuEntidad])
+  // Automatically loads all entities registered in modules via TypeOrmModule.forFeature([YourEntity])
   autoLoadEntities: true,
 
-  // Sincronización automática del esquema con las entidades (útil para pruebas)
+  // Automatic schema synchronization with entities (useful for testing)
   synchronize: configService.get<string>('NODE_ENV') !== 'production',
 
-  // Habilitar para ver queries SQL en consola (útil durante la prueba para depurar)
+  // Enable to see SQL queries in console (useful during testing for debugging)
   logging: configService.get<string>('NODE_ENV') === 'development',
 
-  // 💡 Si usas BD en la nube con SSL (ej: Supabase, Neon, Render), descomentar:
+  // 💡 If using a cloud DB with SSL (e.g.: Supabase, Neon, Render), uncomment:
   // ssl: configService.get<string>('NODE_ENV') === 'production' ? { rejectUnauthorized: false } : false,
 });
 
@@ -48,8 +48,8 @@ export const typeOrmAsyncConfig: TypeOrmModuleAsyncOptions = {
 };
 
 /**
- * 💡 [DATASOURCE PARA TYPEORM CLI]:
- * Utilizado por comandos de consola como 'typeorm migration:generate' o 'typeorm migration:run'.
+ * 💡 [DATASOURCE FOR TYPEORM CLI]:
+ * Used by console commands like 'typeorm migration:generate' or 'typeorm migration:run'.
  */
 export const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',

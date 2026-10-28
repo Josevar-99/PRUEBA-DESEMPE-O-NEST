@@ -10,7 +10,7 @@ import { Request, Response } from 'express';
 import { QueryFailedError, EntityNotFoundError } from 'typeorm';
 
 /**
- * Formato único de error para todos los endpoints (requisito 7.2 y 7.3).
+ * A consistent error format for all endpoints (requirements 7.2 and 7.3).
  */
 export interface ErrorResponse {
   success: false;
@@ -23,11 +23,10 @@ export interface ErrorResponse {
 }
 
 /**
- * Filtro global de excepciones (requisito 7).
- * Da el mismo formato a todos los errores y traduce los errores conocidos de
- * PostgreSQL a códigos HTTP, para que una violación de unicidad sea 409 y no 500.
- * Lo que no se reconoce se responde como 500 genérico: el detalle interno
- * (SQL, stack) solo se escribe en el log, nunca se envía al cliente.
+ * Global exception filter (requirement 7).
+ * Normalizes errors and maps known PostgreSQL errors to HTTP status codes,
+ * so a uniqueness violation returns 409 instead of 500. Unknown errors return
+ * a generic 500 response; internal details (SQL and stack trace) are logged only.
  */
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -38,13 +37,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    // Valores por defecto: cualquier error no reconocido termina como 500 genérico
+    // Unknown errors default to a generic 500 response.
     let statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Internal server error';
     let errors: unknown = undefined;
 
     if (exception instanceof HttpException) {
-      // Errores lanzados a propósito: guards (401/403), services (404/409), ValidationPipe (400)
+      // Expected errors: guards (401/403), services (404/409), and ValidationPipe (400).
       statusCode = exception.getStatus();
       const res = exception.getResponse();
 
@@ -54,16 +53,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
         const resObj = res as Record<string, unknown>;
         message = (resObj.message as string) || exception.message;
 
-        // Errores de ValidationPipe (class-validator): llegan como lista de mensajes
+        // ValidationPipe (class-validator) returns validation messages as an array.
         if (resObj.errors) {
           errors = resObj.errors;
         } else if (Array.isArray(resObj.message)) {
           errors = resObj.message;
-          message = 'Falló la validación de los datos enviados';
+          message = 'Validation of the submitted data failed';
         }
       }
     } else if (exception instanceof QueryFailedError) {
-      // Errores de PostgreSQL: se traducen solo los que son culpa del cliente
+      // Map PostgreSQL errors caused by invalid client input.
       const driverError = (
         exception as unknown as {
           driverError?: { code?: string; detail?: string };
@@ -72,33 +71,33 @@ export class AllExceptionsFilter implements ExceptionFilter {
       const code = driverError?.code;
 
       if (code === '23505') {
-        // Unique violation: red de seguridad si dos requests insertan el mismo valor a la vez
+        // Safety net if two simultaneous requests insert the same unique value.
         statusCode = HttpStatus.CONFLICT;
         message =
-          'Conflicto de unicidad: el registro ya existe en la base de datos';
+          'Uniqueness conflict: the record already exists in the database';
         errors = driverError?.detail;
       } else if (code === '23503') {
-        // Foreign key violation: se referencia un registro que no existe o que está en uso
+        // A referenced record does not exist or is currently in use.
         statusCode = HttpStatus.BAD_REQUEST;
         message =
-          'Violación de clave foránea: el registro referenciado no existe o está en uso';
+          'Foreign key violation: the referenced record does not exist or is in use';
         errors = driverError?.detail;
       } else if (code === '22P02') {
-        // Valor con formato inválido para el tipo de la columna (ej: UUID mal formado)
+        // Invalid value format for the column type (e.g. a malformed UUID).
         statusCode = HttpStatus.BAD_REQUEST;
-        message = 'Formato de dato inválido';
+        message = 'Invalid data format';
       } else {
-        // Código de BD no contemplado = bug del servidor, no del cliente.
-        // Se queda en 500 con mensaje genérico; el detalle va solo al log.
+        // An unmapped database error indicates a server bug, not a client error.
+        // Keep the generic 500 response and log details only.
         this.logger.error(
-          `Error de BD no contemplado (${code})`,
+          `Unhandled database error (${code})`,
           exception.message,
         );
       }
     } else if (exception instanceof EntityNotFoundError) {
-      // Lanzado por findOneOrFail y similares
+      // Thrown by findOneOrFail and similar methods.
       statusCode = HttpStatus.NOT_FOUND;
-      message = 'Recurso no encontrado';
+      message = 'Resource not found';
     }
 
     const errorBody: ErrorResponse = {
@@ -111,8 +110,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       ...(errors ? { errors } : {}),
     };
 
-    // 5xx: error del servidor, se registra el stack completo para depurar.
-    // 4xx: error del cliente, basta un warning.
+    // Log the full stack for server errors; a warning is sufficient for client errors.
     if (statusCode >= 500) {
       this.logger.error(
         `[${request.method}] ${request.url} - Error ${statusCode}: ${message}`,

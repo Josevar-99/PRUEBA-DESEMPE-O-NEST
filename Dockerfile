@@ -1,39 +1,41 @@
 # ==============================================================================
-# DOCKERFILE MULTI-STAGE PARA NESTJS
+# Multi-stage Dockerfile for Workshop API
 # ==============================================================================
 
-# 1. Etapa de dependencias y compilación
+# 1. Build stage
 FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Copiar archivos de dependencias
-COPY package*.json ./
+# bcrypt is a native module; compile it here, where the build tools are available.
+RUN apk add --no-cache python3 make g++
 
-# Instalar todas las dependencias (incluye devDependencies para compilar)
+# Copy package*.json first: if the code changes but dependencies do not,
+# Docker can reuse this layer and build faster.
+COPY package*.json ./
+# npm install uses package-lock.json when available.
 RUN npm install
 
-# Copiar código fuente y compilar
 COPY . .
-RUN npm run build
+# Compile, then remove devDependencies while keeping the compiled bcrypt module.
+RUN npm run build && npm prune --omit=dev
 
-# 2. Etapa de ejecución en producción
+# 2. Runtime stage
 FROM node:22-alpine AS runner
 
 WORKDIR /app
 
-ENV NODE_ENV=production
+# NODE_ENV is provided through .env via docker-compose.
+# In production, synchronize is disabled and TypeORM does not create tables.
 
-# Copiar archivos de dependencias e instalar solo las de producción
-COPY package*.json ./
-RUN npm install --omit=dev
-
-# Copiar el código compilado desde la etapa anterior
+# package.json is required at runtime because it declares "type": "module" (ESM).
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 
-# Puerto donde escucha la aplicación
+# Do not run as root inside the container.
+USER node
+
 EXPOSE 3000
 
-# Comando de inicio del servidor
-CMD ["node", "dist/main"]
-
+CMD ["node", "dist/main.js"]

@@ -9,20 +9,20 @@ import {
 import { Role } from '../../../common/enums/role.enum.js';
 
 export class CreateUserDto {
-  @IsEmail({}, { message: 'El correo electrónico debe ser válido' })
-  @IsNotEmpty({ message: 'El email es obligatorio' })
+  @IsEmail({}, { message: 'The email address must be valid' })
+  @IsNotEmpty({ message: 'The email is required' })
   email: string;
 
-  @IsString({ message: 'La contraseña debe ser una cadena de texto' })
-  @MinLength(6, { message: 'La contraseña debe tener al menos 6 caracteres' })
-  // bcrypt ignora lo que pase de 72 bytes; se rechaza para no truncar en silencio
-  @MaxLength(72, { message: 'La contraseña no puede superar 72 caracteres' })
+  @IsString({ message: 'The password must be a string' })
+  @MinLength(6, { message: 'The password must be at least 6 characters long' })
+  // bcrypt ignores anything beyond 72 bytes; it is rejected to avoid silent truncation
+  @MaxLength(72, { message: 'The password cannot exceed 72 characters' })
   password: string;
 
-  @IsString({ message: 'El nombre debe ser una cadena de texto' })
-  @IsNotEmpty({ message: 'El nombre es obligatorio' })
+  @IsString({ message: 'The name must be a string' })
+  @IsNotEmpty({ message: 'The name is required' })
   name: string;
 
-  @IsEnum(Role, { message: 'El rol debe ser ADMIN o TECHNICIAN' })
+  @IsEnum(Role, { message: 'The role must be ADMIN or TECHNICIAN' })
   role: Role;
 }

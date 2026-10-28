@@ -9,15 +9,15 @@ import { map } from 'rxjs/operators';
 import { Response } from 'express';
 
 /**
- * 💡 [ADAPTAR PARA LA PRUEBA - FORMATO DE RESPUESTA EXITOSA]:
- * Modifica esta interfaz si el enunciado de la prueba exige una estructura de respuesta específica.
+ * 💡 [ADAPT FOR THE TEST - SUCCESS RESPONSE FORMAT]:
+ * Modify this interface if the test specification requires a specific response structure.
  *
- * Estructuras habituales pedidas en pruebas:
- * Opción A (actual):
+ * Common response structures used in tests:
+ * Option A (current):
  *   { success: true, statusCode: 200, timestamp: '...', data: [...] }
- * Opción B:
+ * Option B:
  *   { status: 'success', result: [...] }
- * Opción C:
+ * Option C:
  *   { code: 200, message: 'OK', data: [...] }
  */
 export interface ApiResponse<T> {
@@ -41,7 +41,7 @@ export class ResponseInterceptor<T> implements NestInterceptor<
 
     return next.handle().pipe(
       map((data) => ({
-        // 💡 Modifica los campos que retornas aquí según la rúbrica de tu prueba:
+        // 💡 Adjust the returned fields here to match your test requirements:
         success: true,
         statusCode: response.statusCode,
         timestamp: new Date().toISOString(),

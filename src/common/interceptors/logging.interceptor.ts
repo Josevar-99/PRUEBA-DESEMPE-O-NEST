@@ -10,15 +10,15 @@ import { tap } from 'rxjs/operators';
 import { Request } from 'express';
 
 /**
- * 💡 [ADAPTAR PARA LA PRUEBA - INTERCEPTOR DE RENDIMIENTO / AUDITORÍA]:
- * Mide el tiempo exacto que tarda en ejecutarse la lógica dentro del controlador/servicio.
- * A diferencia del Middleware, el Interceptor se ejecuta dentro del ciclo de vida de NestJS,
- * teniendo acceso a la clase del controlador (`context.getClass().name`) y al método (`context.getHandler().name`).
+ * 💡 [ADAPT FOR THE TEST - PERFORMANCE / AUDIT INTERCEPTOR]:
+ * Measures the exact execution time of controller and service logic. Unlike
+ * middleware, an interceptor runs within the NestJS lifecycle and can access
+ * the controller class (`context.getClass().name`) and method (`context.getHandler().name`).
  *
- * 💡 CASOS DE USO EN PRUEBAS:
- * - Auditoría de endpoints lentos.
- * - Registro en base de datos de auditoría de quién ejecutó la acción.
- * - Descartar peticiones que excedan un tiempo límite con RxJS `timeout(...)`.
+ * 💡 POSSIBLE TEST USE CASES:
+ * - Audit slow endpoints.
+ * - Record who executed an action in the audit database.
+ * - Reject requests that exceed a time limit with RxJS `timeout(...)`.
  */
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {

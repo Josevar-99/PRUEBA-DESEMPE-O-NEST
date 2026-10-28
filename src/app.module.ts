@@ -16,86 +16,86 @@ import { AllExceptionsFilter } from './common/filters/http-exception.filter.js';
 import { UsersModule } from './modules/users/users.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { HealthModule } from './modules/health/health.module.js';
-import { TalleresModule } from './modules/talleres/talleres.module.js';
-import { VehiculosModule } from './modules/vehiculos/vehiculos.module.js';
-import { MecanicosModule } from './modules/mecanicos/mecanicos.module.js';
-import { MantenimientosModule } from './modules/mantenimientos/mantenimientos.module.js';
-import { IntegracionesModule } from './modules/integraciones/integraciones.module.js';
-import { AuditoriasModule } from './modules/auditorias/auditorias.module.js';
-import { AuditInterceptor } from './modules/auditorias/audit.interceptor.js';
+import { WorkshopsModule } from './modules/workshops/workshops.module.js';
+import { VehiclesModule } from './modules/vehicles/vehicles.module.js';
+import { MechanicsModule } from './modules/mechanics/mechanics.module.js';
+import { MaintenancesModule } from './modules/maintenances/maintenances.module.js';
+import { IntegrationsModule } from './modules/integrations/integrations.module.js';
+import { AuditsModule } from './modules/audits/audits.module.js';
+import { AuditInterceptor } from './modules/audits/audit.interceptor.js';
 
 /**
- * 💡 [ADAPTAR PARA LA PRUEBA - MÓDULO PRINCIPAL]:
+ * 💡 [ADAPT FOR THE TEST - MAIN MODULE]:
  *
- * 💡 CÓMO AGREGAR NUEVOS MÓDULOS DE TU PRUEBA:
- * 1. Genera o crea tu nuevo módulo (ej: ProductosModule, OrdenesModule):
- *    `nest g res modules/productos --no-spec`
- * 2. Impórtalo en el array `imports: [...]` de este archivo.
+ * 💡 HOW TO ADD NEW MODULES FOR YOUR TEST:
+ * 1. Generate or create your new module (e.g.: ProductsModule, OrdersModule):
+ *    `nest g res modules/products --no-spec`
+ * 2. Import it in the `imports: [...]` array of this file.
  *
- * 💡 CICLO DE VIDA GLOBAL CONFIGURADO:
- * 1. ConfigModule + validateEnv: Valida el archivo .env con Zod al arrancar.
- * 2. TypeOrmModule: Conexión con PostgreSQL gestionada en src/config/typeorm.config.ts.
- * 3. AllExceptionsFilter: Formatea todos los errores HTTP y de base de datos.
- * 4. ResponseInterceptor: Estandariza respuestas exitosas { success, statusCode, data, timestamp }.
- * 5. LoggingInterceptor: Mide tiempos de respuesta en consola.
- * 6. JwtAuthGuard: Protege todas las rutas (salvo @Public()).
- * 7. RolesGuard: Aplica restricciones de rol con @Roles(...).
- * 8. LoggerMiddleware: Imprime logs HTTP y propaga x-request-id en toda la app.
+ * 💡 GLOBAL LIFECYCLE CONFIGURED:
+ * 1. ConfigModule + validateEnv: Validates the .env file with Zod at startup.
+ * 2. TypeOrmModule: PostgreSQL connection managed in src/config/typeorm.config.ts.
+ * 3. AllExceptionsFilter: Formats all HTTP and database errors.
+ * 4. ResponseInterceptor: Standardizes successful responses { success, statusCode, data, timestamp }.
+ * 5. LoggingInterceptor: Measures response times in the console.
+ * 6. JwtAuthGuard: Protects all routes (except @Public()).
+ * 7. RolesGuard: Applies role restrictions with @Roles(...).
+ * 8. LoggerMiddleware: Prints HTTP logs and propagates x-request-id throughout the app.
  */
 @Module({
   imports: [
-    // 1. Configuración de variables de entorno y validación con Zod
+    // 1. Environment variable configuration and validation with Zod
     ConfigModule.forRoot({
       isGlobal: true,
       validate: validateEnv,
     }),
 
-    // 2. Conexión a Base de Datos PostgreSQL con TypeORM
+    // 2. PostgreSQL Database connection with TypeORM
     TypeOrmModule.forRootAsync(typeOrmAsyncConfig),
 
-    // 3. Módulos funcionales de la aplicación
+    // 3. Application functional modules
     UsersModule,
     AuthModule,
     HealthModule,
-    TalleresModule,
-    VehiculosModule,
-    MecanicosModule,
-    MantenimientosModule,
-    IntegracionesModule,
-    AuditoriasModule,
+    WorkshopsModule,
+    VehiclesModule,
+    MechanicsModule,
+    MaintenancesModule,
+    IntegrationsModule,
+    AuditsModule,
 
-    // 💡 [AGREGAR AQUÍ TUS NUEVOS MÓDULOS]:
+    // 💡 [ADD YOUR NEW MODULES HERE]:
     // ProductsModule,
     // OrdersModule,
     // CategoriesModule,
   ],
   providers: [
-    // Exception Filter global: captura errores HTTP y de BD (TypeORM)
+    // Global Exception Filter: catches HTTP and DB (TypeORM) errors
     {
       provide: APP_FILTER,
       useClass: AllExceptionsFilter,
     },
-    // Interceptor global: formato unificado de respuestas exitosas
+    // Global Interceptor: unified format for successful responses
     {
       provide: APP_INTERCEPTOR,
       useClass: ResponseInterceptor,
     },
-    // Interceptor de rendimiento: auditoría de tiempos de ejecución
+    // Performance Interceptor: execution time auditing
     {
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,
     },
-    // Auditoría: va después de ResponseInterceptor para recibir los datos sin envolver
+    // Audit: runs after ResponseInterceptor to receive unwrapped data
     {
       provide: APP_INTERCEPTOR,
       useClass: AuditInterceptor,
     },
-    // Guard global de autenticación: rutas privadas por defecto (usar @Public() para eximir)
+    // Global authentication guard: routes are private by default (use @Public() to exempt)
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
     },
-    // Guard global de autorización: verifica @Roles(Role.ADMIN, ...)
+    // Global authorization guard: enforces @Roles(Role.ADMIN, ...)
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
@@ -104,13 +104,13 @@ import { AuditInterceptor } from './modules/auditorias/audit.interceptor.js';
 })
 export class AppModule implements NestModule {
   /**
-   * Configuración de Middlewares globales
+   * Global Middleware configuration
    */
   configure(consumer: MiddlewareConsumer): void {
-    // Aplica el LoggerMiddleware con x-request-id a todas las rutas
-    consumer.apply(LoggerMiddleware).forRoutes('*');
+    // Applies LoggerMiddleware with x-request-id to all routes
+    consumer.apply(LoggerMiddleware).forRoutes('*path');
 
-    // 💡 Si necesitas excluir rutas del middleware:
+    // 💡 If you need to exclude routes from the middleware:
     // consumer.apply(LoggerMiddleware).exclude('health').forRoutes('*');
   }
 }

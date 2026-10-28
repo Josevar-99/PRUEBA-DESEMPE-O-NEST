@@ -3,17 +3,17 @@ import { Request, Response, NextFunction } from 'express';
 import { randomUUID } from 'crypto';
 
 /**
- * 💡 [ADAPTAR PARA LA PRUEBA - MIDDLEWARE DE LOGGING Y TRAZABILIDAD]:
- * Este middleware intercepta cada petición entrante:
- * 1. Genera o propaga un ID único de correlación ('x-request-id') en req y res.
- * 2. Mide la latencia en milisegundos desde que entra la petición hasta que finaliza.
- * 3. Imprime logs detallados diferenciando según el código de respuesta (2xx info, 4xx warn, 5xx error).
+ * 💡 [ADAPT FOR THE TEST - LOGGING AND TRACEABILITY MIDDLEWARE]:
+ * This middleware intercepts each incoming request:
+ * 1. Generates or propagates a unique correlation ID ('x-request-id') in req and res.
+ * 2. Measures latency in milliseconds from when the request arrives until it finishes.
+ * 3. Prints detailed logs differentiated by response code (2xx info, 4xx warn, 5xx error).
  *
- * 💡 ADAPTACIONES COMUNES EN PRUEBAS:
- * - Omitir logging en rutas específicas (ej: si no quieres logs de /health):
+ * 💡 COMMON ADAPTATIONS IN TESTS:
+ * - Omit logging on specific routes (e.g.: if you don't want /health logs):
  *   if (req.originalUrl.includes('/health')) return next();
- * - Registrar cabeceras adicionales requeridas por el enunciado.
- * - Registrar el body de peticiones sensibles (ej: req.body).
+ * - Log additional headers required by the specification.
+ * - Log the body of sensitive requests (e.g.: req.body).
  */
 @Injectable()
 export class LoggerMiddleware implements NestMiddleware {
@@ -24,7 +24,7 @@ export class LoggerMiddleware implements NestMiddleware {
     const { method, originalUrl, ip } = req;
     const userAgent = req.get('user-agent') || '';
 
-    // Generar o propagar correlation/request ID para trazabilidad
+    // Generate or propagate correlation/request ID for traceability
     const requestId = (req.headers['x-request-id'] as string) || randomUUID();
     req.headers['x-request-id'] = requestId;
     res.setHeader('x-request-id', requestId);

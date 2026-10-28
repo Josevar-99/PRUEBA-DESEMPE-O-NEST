@@ -4,16 +4,16 @@ import { Role } from '../enums/role.enum.js';
 export const ROLES_KEY = 'roles';
 
 /**
- * 💡 [ADAPTAR PARA LA PRUEBA - CONTROL DE ACCESO POR ROLES (RBAC)]:
- * Utiliza este decorador para restringir el acceso a un endpoint a roles específicos.
- * Requiere que el controlador o método tenga activo el RolesGuard (o esté registrado globalmente).
+ * 💡 [ADAPT FOR THE TEST - ROLE-BASED ACCESS CONTROL (RBAC)]:
+ * Use this decorator to restrict access to an endpoint to specific roles.
+ * Requires the controller or method to have RolesGuard active (or registered globally).
  *
- * Ejemplo de uso en controlador:
+ * Usage example in a controller:
  *   @Roles(Role.ADMIN)
  *   @Delete(':id')
- *   eliminarUsuario(@Param('id') id: string) { ... }
+ *   deleteUser(@Param('id') id: string) { ... }
  *
- * Puedes pasar múltiples roles permitidos:
+ * You can pass multiple allowed roles:
  *   @Roles(Role.ADMIN, Role.USER)
  */
 export const Roles = (...roles: [Role, ...Role[]]) =>

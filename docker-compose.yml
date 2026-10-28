@@ -1,8 +1,8 @@
 services:
   db:
-    # 💡 [ADAPTAR PARA LA PRUEBA]:
-    # - Si el enunciado exige otra versión de PostgreSQL (ej: postgres:15-alpine), cámbiala aquí.
-    # - Si el enunciado exige MySQL: image: mysql:8.0 y ajusta las variables de entorno.
+    # 💡 [ADAPT FOR THE TEST]:
+    # - If the specification requires another PostgreSQL version (e.g. postgres:15-alpine), change it here.
+    # - For MySQL, use image: mysql:8.0 and adjust the environment variables.
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
@@ -10,20 +10,19 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      # 💡 Si el puerto 5432 del host ya está ocupado en tu máquina,
-      # cambia POSTGRES_PORT en el .env a 5433, 5434, etc.
+      # 💡 If host port 5432 is already in use, set POSTGRES_PORT in .env to 5433, 5434, etc.
       - "${POSTGRES_PORT}:5432"
     volumes:
-      # 💡 Nombre del volumen persistente para los datos de PostgreSQL
+      # 💡 Persistent volume name for PostgreSQL data
       - pgdata:/var/lib/postgresql/data
 
-  # 💡 Servicio opcional para dockerizar la aplicación si la prueba incluye Dockerfile
+  # 💡 Optional service to run the application in Docker if the test includes a Dockerfile
   api:
     build: .
     restart: unless-stopped
     env_file: .env
     environment:
-      # Dentro de la red de Docker Compose la BD se llama "db" y escucha en el puerto 5432 interno
+      # Inside the Docker Compose network, the database is named "db" and listens on internal port 5432
       POSTGRES_HOST: db
       POSTGRES_PORT: 5432
     ports:

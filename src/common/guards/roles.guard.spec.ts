@@ -24,28 +24,28 @@ describe('RolesGuard', () => {
     } as unknown as ExecutionContext;
   };
 
-  it('debe permitir acceso si no se especifican roles requeridos', () => {
+  it('allows access when no required roles are specified', () => {
     jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(null);
     const context = createMockContext({ role: Role.USER });
 
     expect(guard.canActivate(context)).toBe(true);
   });
 
-  it('debe permitir acceso si el usuario tiene el rol requerido', () => {
+  it('allows access when the user has the required role', () => {
     jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([Role.ADMIN]);
     const context = createMockContext({ role: Role.ADMIN });
 
     expect(guard.canActivate(context)).toBe(true);
   });
 
-  it('debe lanzar ForbiddenException si el usuario no tiene el rol requerido', () => {
+  it('throws ForbiddenException when the user does not have the required role', () => {
     jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([Role.ADMIN]);
     const context = createMockContext({ role: Role.USER });
 
     expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
   });
 
-  it('debe lanzar ForbiddenException si no hay usuario autenticado', () => {
+  it('throws ForbiddenException when there is no authenticated user', () => {
     jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([Role.ADMIN]);
     const context = createMockContext(null);
 

@@ -1,5 +1,5 @@
 {
-  "name": "base-prueba-nest.js",
+  "name": "workshop-api",
   "version": "0.0.1",
   "description": "",
   "author": "jose vargas",
@@ -10,6 +10,7 @@
     "build": "nest build",
     "deploy": "nest deploy",
     "seed": "nest build && node dist/database/seeds/seed.js",
+    "db:reset": "npm run build && typeorm schema:drop -d ./src/config/typeorm.config.ts && npm run seed",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",

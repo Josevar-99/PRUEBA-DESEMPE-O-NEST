@@ -5,12 +5,12 @@ import { UsersController } from './users.controller.js';
 import { User } from './entities/user.entity.js';
 
 /**
- * 💡 [ADAPTAR PARA LA PRUEBA - MÓDULO DE RECURSO]:
- * Cada vez que crees una nueva entidad para tu prueba:
- * 1. Regístrala en `imports: [TypeOrmModule.forFeature([TuEntidad])]`.
- * 2. Si otro módulo necesita consultar TuEntidad/TuServicio (ej: AuthModule o ReportsModule),
- *    agrégalo en `exports: [TuServicio, TypeOrmModule]`.
- * 3. Importa este módulo en `src/app.module.ts`.
+ * 💡 [ADAPT FOR THE TEST - RESOURCE MODULE]:
+ * Every time you create a new entity for your test:
+ * 1. Register it in `imports: [TypeOrmModule.forFeature([YourEntity])]`.
+ * 2. If another module needs to query YourEntity/YourService (e.g. AuthModule or ReportsModule),
+ *    add it to `exports: [YourService, TypeOrmModule]`.
+ * 3. Import this module in `src/app.module.ts`.
  */
 @Module({
   imports: [TypeOrmModule.forFeature([User])],

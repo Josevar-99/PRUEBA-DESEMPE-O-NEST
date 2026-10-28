@@ -1,29 +1,29 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
 /**
- * 💡 [ADAPTAR PARA LA PRUEBA - INTERFAZ DE PAYLOAD JWT]:
- * Modifica o agrega propiedades si tu token JWT incluye más datos
- * (ej: tenantId, sucursalId, permisos, nombre, etc.).
+ * 💡 [ADAPT FOR THE TEST - JWT PAYLOAD INTERFACE]:
+ * Modify or add properties if your JWT token includes more data
+ * (e.g.: tenantId, branchId, permissions, name, etc.).
  */
 export interface JwtPayload {
-  sub: string; // ID único del usuario autenticado (UUID)
-  email: string; // Correo del usuario
-  role: string; // Rol del usuario (ej: ADMIN, USER)
+  sub: string; // Unique ID of the authenticated user (UUID)
+  email: string; // User's email
+  role: string; // User's role (e.g.: ADMIN, USER)
   [key: string]: unknown;
 }
 
 /**
- * 💡 [ADAPTAR PARA LA PRUEBA - DECORADOR @CurrentUser]:
- * Permite inyectar los datos del usuario autenticado directamente en los métodos del controlador.
+ * 💡 [ADAPT FOR THE TEST - @CurrentUser DECORATOR]:
+ * Allows injecting authenticated user data directly into controller methods.
  *
- * Ejemplos de uso en controlador:
- * 1. Obtener el payload completo:
- *    @Get('perfil')
- *    obtenerPerfil(@CurrentUser() user: JwtPayload) { return user; }
+ * Usage examples in a controller:
+ * 1. Get the full payload:
+ *    @Get('profile')
+ *    getProfile(@CurrentUser() user: JwtPayload) { return user; }
  *
- * 2. Obtener solo una propiedad específica (ej: el id/sub):
- *    @Post('crear-orden')
- *    crearOrden(@CurrentUser('sub') userId: string, @Body() dto: CrearOrdenDto) { ... }
+ * 2. Get only a specific property (e.g.: the id/sub):
+ *    @Post('create-order')
+ *    createOrder(@CurrentUser('sub') userId: string, @Body() dto: CreateOrderDto) { ... }
  */
 export const CurrentUser = createParamDecorator(
   (data: keyof JwtPayload | undefined, ctx: ExecutionContext) => {
